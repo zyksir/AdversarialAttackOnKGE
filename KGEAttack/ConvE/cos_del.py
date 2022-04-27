@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In this notebook, I delete a triple from the neighbourhood of the target triple based on the cosine similarity between the candidate triple's embedding and the target triple's embedding
+# In this notebook, I delete a triple from the neighbourhood of the target triple based on
+# the cosine similarity between the candidate triple's embedding and the target triple's embedding
 # 
 # - 'triple' embedding is computed by applying the model's scoring function to embeddings
 # - neighbourhood refers to the triples that share the entities with target's entities

@@ -1,0 +1,1 @@
+CUDA_VISIBLE_DEVICES=4 python code/main.py --data FB15K237 --model transe

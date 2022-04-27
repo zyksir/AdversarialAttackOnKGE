@@ -60,7 +60,10 @@ class Main(object):
     def _load_data(self, file_path):
         df = pd.read_csv(file_path, sep='\t', header=None, names=None, dtype=str)
         df = df.drop_duplicates()
-        return df.values
+        triples = []
+        for head, relation, tail in df.values:
+            triples.append([])
+        return triples
     
     def load_data(self):
         ''' 
@@ -81,12 +84,15 @@ class Main(object):
         self.valid_data = self._load_data(os.path.join(data_path, 'valid.txt'))
         self.test_data = self._load_data(os.path.join(data_path, 'test.txt'))
     
-        inp_f = open(os.path.join(data_path, 'to_skip_eval.pickle'), 'rb')
-        self.to_skip_eval: Dict[str, Dict[Tuple[int, int], List[int]]] = pickle.load(inp_f)
-        inp_f.close()
-        self.to_skip_eval['lhs'] = {(int(k[0]), int(k[1])): v for k,v in self.to_skip_eval['lhs'].items()}
-        self.to_skip_eval['rhs'] = {(int(k[0]), int(k[1])): v for k,v in self.to_skip_eval['rhs'].items()}
-        #print('To skip eval Lhs: {0}'.format(len(self.to_skip_eval['lhs'])))
+        if os.path.exists(os.path.join(data_path, 'to_skip_eval.pickle')):
+            inp_f = open(os.path.join(data_path, 'to_skip_eval.pickle'), 'rb')
+            self.to_skip_eval: Dict[str, Dict[Tuple[int, int], List[int]]] = pickle.load(inp_f)
+            inp_f.close()
+            self.to_skip_eval['lhs'] = {(int(k[0]), int(k[1])): v for k,v in self.to_skip_eval['lhs'].items()}
+            self.to_skip_eval['rhs'] = {(int(k[0]), int(k[1])): v for k,v in self.to_skip_eval['rhs'].items()}
+        else:
+            self.to_skip_eval = dict([])
+            self.to_skip_eval['lhs'], self.to_skip_eval['rhs'] = dict([]), dict([])
         
         return
     

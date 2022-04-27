@@ -6,7 +6,7 @@ cd ConvE
 # # train the original model
 echo 'Training original model'
 
-CUDA_VISIBLE_DEVICES=0 python -u main.py --model complex --data FB15k-237 --save-influence-map --reproduce-results
+CUDA_VISIBLE_DEVICES=3 python -u main.py --model complex --data FB15k-237 --save-influence-map --reproduce-results
 
 echo 'Selecting target triples'
 mkdir data/target_complex_FB15k-237_0

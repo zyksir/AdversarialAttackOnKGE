@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SshConfigs">
+    <configs>
+      <sshConfig host="qilin.cs.ucla.edu" id="960a1110-0353-45c8-b82f-ee540156ace9" keyPath="$USER_HOME$/.ssh/id_rsa" port="22" nameFormat="DESCRIPTIVE" username="zyksir" useOpenSSHConfig="true" />
+    </configs>
+  </component>
+</project>
