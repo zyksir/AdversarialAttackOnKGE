@@ -256,7 +256,7 @@ class KGEModel(nn.Module):
         return score
     
     @staticmethod
-    def compute_loss(model, args, positive_sample, negative_sample, subsampling_weight, mode):
+    def compute_score(model, args, positive_sample, negative_sample, mode):
         negative_score = model((positive_sample, negative_sample), mode=mode)
         positive_score = model(positive_sample)
 
@@ -270,15 +270,7 @@ class KGEModel(nn.Module):
         positive_score = F.logsigmoid(positive_score).squeeze(dim=1)
         # embed()
 
-        if args.uni_weight:
-            positive_sample_loss = - positive_score.mean()
-            negative_sample_loss = - negative_score.mean()
-        else:
-            positive_sample_loss = - (subsampling_weight * positive_score).sum() / subsampling_weight.sum()
-            negative_sample_loss = - (subsampling_weight * negative_score).sum() / subsampling_weight.sum()
-
-        loss = (positive_sample_loss + negative_sample_loss) / 2
-        return loss
+        return positive_score, negative_score
 
     @staticmethod
     def train_step(model, optimizer, train_iterator, args):
@@ -297,8 +289,17 @@ class KGEModel(nn.Module):
             negative_sample = negative_sample.cuda()
             subsampling_weight = subsampling_weight.cuda()
 
-        loss = KGEModel.compute_loss(model, args, positive_sample, negative_sample, subsampling_weight, mode)
-        
+        positive_score, negative_score = KGEModel.compute_score(model, args, positive_sample, negative_sample, mode)
+
+        if args.uni_weight:
+            positive_sample_loss = - positive_score.mean()
+            negative_sample_loss = - negative_score.mean()
+        else:
+            positive_sample_loss = - (subsampling_weight * positive_score).sum() / subsampling_weight.sum()
+            negative_sample_loss = - (subsampling_weight * negative_score).sum() / subsampling_weight.sum()
+
+        loss = (positive_sample_loss + negative_sample_loss) / 2
+
         if args.regularization != 0.0:
             #Use L3 regularization for ComplEx and DistMult
             regularization = args.regularization * (

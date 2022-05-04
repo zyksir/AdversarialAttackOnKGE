@@ -30,6 +30,11 @@ class TrainDataset(Dataset):
         if if_reweight:
             subsampling_weight = self.count[(head, relation)] + self.count[(tail, -relation - 1)]
             subsampling_weight = torch.sqrt(1 / torch.Tensor([subsampling_weight]))
+        else:
+            if (relation, tail) not in self.true_head:
+                self.true_head[(relation, tail)] = [head]
+            if (head, relation) not in self.true_tail:
+                self.true_tail[(head, relation)] = [tail]
 
         negative_sample_list = []
         negative_sample_size = 0
