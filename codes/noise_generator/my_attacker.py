@@ -50,7 +50,7 @@ class MyAddition(GlobalRandomNoiseAttacker):
             elif mode == "tail-batch":
                 s1 = self.kge_model.score_embedding(embed_cand_e, embed_cand_r, perturbed_embed_t, mode=mode)
                 s2 = self.kge_model.score_embedding(embed_cand_e, embed_cand_r, embed_t, mode=mode)
-            score = self.score_func(s1, s2)
+            # score = self.score_func(s1, s2)
             # embed()
             score = score.detach().cpu().numpy().tolist()
             cand_scores += score

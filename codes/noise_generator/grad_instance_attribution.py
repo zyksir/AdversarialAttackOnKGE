@@ -68,7 +68,6 @@ class InstanceAttributionCosGrad(InstanceAttributionCos):
         #         self.triple2loss[(h, r, t)] = (-positive_score[i]-negative_score[i])/4 + self.triple2loss[(h, r, t)]/2
         # # embed()
 
-
     def get_mode_loss(self, triple, mode):
         if mode == "head-mode":
             dataset = self.trainer.train_dataloader_head.dataset
