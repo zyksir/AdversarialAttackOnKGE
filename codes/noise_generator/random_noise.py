@@ -14,7 +14,7 @@ def get_noise_args(args=None):
     parser.add_argument('--epsilon', default=1.0, type=float)
     parser.add_argument('--lambda1', default=1.0, type=float)
     parser.add_argument('--lambda2', default=1.0, type=float)
-    parser.add_argument('--corruption_factor', default=5, type=int)
+    parser.add_argument('--corruption_factor', default=5, type=float)
     parser.add_argument('--num_cand_batch', default=64, type=int)
     return parser.parse_args(args)
 
@@ -61,9 +61,9 @@ class GlobalRandomNoiseAttacker:
         print('------ Generating noise for each target triple ------')
         start_time = time.time()
         noise_triples = self.get_noise_triples()
-        print(f"Time taken to generate noise by {self.name}: {time.time() - start_time}")
-        with open(os.path.join(self.args.init_checkpoint, "%s.pkl" % identifier), "wb") as fw:
-            pickle.dump(noise_triples, fw)
+        print(f"Time taken to generate noise by {self.name} for {self.args.init_checkpoint}: {time.time() - start_time}")
+        # with open(os.path.join(self.args.init_checkpoint, "%s.pkl" % identifier), "wb") as fw:
+        #     pickle.dump(noise_triples, fw)
 
 
 class LocalRandomNoiseAttacker(GlobalRandomNoiseAttacker):

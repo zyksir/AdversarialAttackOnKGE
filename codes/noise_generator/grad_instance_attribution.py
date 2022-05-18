@@ -31,42 +31,6 @@ class InstanceAttributionCosGrad(InstanceAttributionCos):
                 self.param_list.append(p)
 
         self.triple2loss = {}
-        # train_dataloader_head = DataLoader(
-        #     TrainDataset(self.trainer.input_data.train_triples + self.target_triples,
-        #                  args.nentity, args.nrelation,
-        #                  args.negative_sample_size, 'head-batch'),
-        #     batch_size=args.batch_size,
-        #     shuffle=True,
-        #     num_workers=max(1, args.cpu_num // 2),
-        #     collate_fn=TrainDataset.collate_fn
-        # )
-
-        # train_dataloader_tail = DataLoader(
-        #     TrainDataset(self.trainer.input_data.train_triples + self.target_triples,
-        #                  args.nentity, args.nrelation,
-        #                  args.negative_sample_size, 'tail-batch'),
-        #     batch_size=args.batch_size,
-        #     shuffle=True,
-        #     num_workers=max(1, args.cpu_num // 2),
-        #     collate_fn=TrainDataset.collate_fn
-        # )
-        # for positive_sample, negative_sample, _, mode in tqdm(train_dataloader_head):
-        #     if args.cuda:
-        #         positive_sample = positive_sample.cuda()
-        #         negative_sample = negative_sample.cuda()
-        #     positive_score, negative_score = KGEModel.compute_score(
-        #         self.kge_model, args, positive_sample, negative_sample, mode)
-        #     for i, (h, r, t) in enumerate(positive_sample.detach().cpu().numpy().tolist()):
-        #         self.triple2loss[(h, r, t)] = (-positive_score[i]-negative_score[i])/2
-        # for positive_sample, negative_sample, _, mode in tqdm(train_dataloader_tail):
-        #     if args.cuda:
-        #         positive_sample = positive_sample.cuda()
-        #         negative_sample = negative_sample.cuda()
-        #     positive_score, negative_score = KGEModel.compute_score(
-        #         self.kge_model, args, positive_sample, negative_sample, mode)
-        #     for i, (h, r, t) in enumerate(positive_sample.detach().cpu().numpy().tolist()):
-        #         self.triple2loss[(h, r, t)] = (-positive_score[i]-negative_score[i])/4 + self.triple2loss[(h, r, t)]/2
-        # # embed()
 
     def get_mode_loss(self, triple, mode):
         if mode == "head-mode":

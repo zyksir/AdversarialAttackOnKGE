@@ -412,17 +412,13 @@ class KGEModel(nn.Module):
         return metrics
 
     def score_embedding(self, head, relation, tail, mode="simple", get_vec=False):
-        bsize = relation.shape[0]
-        if mode == "simple":        # the shape of h/r/t is [dim]
-            head, relation, tail = head.view(1, 1, -1), relation.view(1, 1, -1), tail.view(1, 1, -1)
-        elif mode == "head-batch":  # the shape of h is [dim], r/t is [bsize, dim]
-            head, relation, tail = head.view(1, 1, -1), relation.view(bsize, 1, -1), tail.view(bsize, 1, -1)
-        elif mode == "tail-batch":  # the shape of t is [dim], h/r is [bsize, dim]
-            head, relation, tail = head.view(bsize, 1, -1), relation.view(bsize, 1, -1), tail.view(1, 1, -1)
-        elif mode == "all-batch":
-            head, relation, tail = head.view(bsize, 1, -1), relation.view(bsize, 1, -1), tail.view(bsize, 1, -1)
-        else:
-            raise ValueError('mode %s not supported' % mode)
+        def vec2three_dim_vec(vec):
+            if len(vec.shape) == 2:
+                return vec.unsqueeze(1)
+            elif len(vec.shape) == 1:
+                return vec.unsqueeze(0).unsqueeze(0)
+            raise f"strange vec shape {vec.shape}"
+        head, relation, tail = vec2three_dim_vec(head), vec2three_dim_vec(relation), vec2three_dim_vec(tail)
 
         model_func = {
             'TransE': self.TransE,
