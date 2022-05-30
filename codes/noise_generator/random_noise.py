@@ -62,8 +62,8 @@ class GlobalRandomNoiseAttacker:
         start_time = time.time()
         noise_triples = self.get_noise_triples()
         print(f"Time taken to generate noise by {self.name} for {self.args.init_checkpoint}: {time.time() - start_time}")
-        # with open(os.path.join(self.args.init_checkpoint, "%s.pkl" % identifier), "wb") as fw:
-        #     pickle.dump(noise_triples, fw)
+        with open(os.path.join(self.args.init_checkpoint, "%s.pkl" % identifier), "wb") as fw:
+            pickle.dump(noise_triples, fw)
 
 
 class LocalRandomNoiseAttacker(GlobalRandomNoiseAttacker):

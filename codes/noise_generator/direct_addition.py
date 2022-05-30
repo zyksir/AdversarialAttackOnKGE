@@ -20,12 +20,15 @@ class DirectAddition(GlobalRandomNoiseAttacker):
     def get_noise_for_head(self, test_triple, mode="head-batch"):
         args = self.args
         h, r, t = test_triple
+        s = time.time()
         cand_r_list = random.choices(self.all_relations, k=args.num_cand)
         cand_e_list = random.choices(self.all_entities, k=args.num_cand)
         cand_r_e_list = list(set(zip(cand_r_list, cand_e_list)))
         cand_r_list, cand_e_list = zip(*cand_r_e_list)
         cand_r_list, cand_e_list = list(cand_r_list), list(cand_e_list)
         args.num_cand = len(cand_r_list)
+        e1 = time.time()
+        # print("gen cand %f" % (e1 - s))
 
         embed_h = self.kge_model.entity_embedding[h]
         embed_r = self.kge_model.relation_embedding[r]
@@ -38,6 +41,8 @@ class DirectAddition(GlobalRandomNoiseAttacker):
         elif mode == "tail-batch":
             embed_t_grad = autograd.grad(score, embed_t)[0]
             perturbed_embed_t = embed_t - args.epsilon * embed_t_grad
+        e2 = time.time()
+        # print("cal grad %f" % (e2 - e1))
 
         b_begin = 0
         cand_scores = []
@@ -62,6 +67,8 @@ class DirectAddition(GlobalRandomNoiseAttacker):
         cand_scores = np.array(cand_scores)
         idx = np.argmax(cand_scores)
         score = cand_scores[idx]
+        e3 = time.time()
+        # print("cal score %f" % (e3 - e2))
         if mode == "head-batch":
             return (h, cand_r_list[idx], cand_e_list[idx]), score.item()
         return (cand_e_list[idx], cand_r_list[idx], t), score.item()
@@ -96,6 +103,7 @@ class CentralDiffAddition(DirectAddition):
     def __init__(self, args):
         super(CentralDiffAddition, self).__init__(args)
         self.name = "central_diff"
+        self.args.epsilon = self.args.learning_rate
 
     def get_noise_for_head(self, test_triple, mode="head-batch"):
         args = self.args
@@ -171,14 +179,22 @@ class DirectRelAddition(DirectAddition):
             return test_triple, -1e9
         args = self.args
         h, r, t = test_triple
-        args.num_cand_ent = np.math.ceil(args.nentity / 100)
-        # embed()
-
-        cand_e_list = random.sample(self.all_entities, k=args.num_cand_ent)
-        cand_h_t_list = list(itertools.product(cand_e_list, cand_e_list))
+        s = time.time()
+        cand_h_list = random.choices(self.all_entities, k=args.num_cand)
+        cand_t_list = random.choices(self.all_entities, k=args.num_cand)
+        cand_h_t_list = list(set(zip(cand_h_list, cand_t_list)))
         cand_h_list, cand_t_list = zip(*cand_h_t_list)
         cand_h_list, cand_t_list = list(cand_h_list), list(cand_t_list)
         args.num_cand = len(cand_h_list)
+        e1 = time.time()
+        # print("gen cand %f" % (e1 - s))
+
+        # args.num_cand_ent = np.math.ceil(args.nentity / 100)
+        # cand_e_list = random.sample(self.all_entities, k=args.num_cand_ent)
+        # cand_h_t_list = list(itertools.product(cand_e_list, cand_e_list))
+        # cand_h_list, cand_t_list = zip(*cand_h_t_list)
+        # cand_h_list, cand_t_list = list(cand_h_list), list(cand_t_list)
+        # args.num_cand = len(cand_h_list)
 
         embed_h = self.kge_model.entity_embedding[h]
         embed_r = self.kge_model.relation_embedding[r]
@@ -186,6 +202,8 @@ class DirectRelAddition(DirectAddition):
         score = self.kge_model.score_embedding(embed_h, embed_r, embed_t)
         embed_r_grad = autograd.grad(score, embed_r)[0]
         perturbed_embed_r = embed_r - args.epsilon * embed_r_grad
+        e2 = time.time()
+        # print("cal grad %f" % (e2 - e1))
 
         b_begin = 0
         cand_scores = []
@@ -205,6 +223,8 @@ class DirectRelAddition(DirectAddition):
         cand_scores = np.array(cand_scores)
         idx = np.argmax(cand_scores)
         score = cand_scores[idx]
+        e3 = time.time()
+        # print("cal score %f" % (e3 - e2))
         return (cand_h_list[idx], r, cand_t_list[idx]), score.item()
 
 if __name__ == "__main__":
@@ -216,12 +236,12 @@ if __name__ == "__main__":
 
     generator = DirectAddition(args)
     generator.generate("direct" + suffix)
-
-    generator = TaylorAddition(args)
-    generator.generate("taylor" + suffix)
-
-    generator = CentralDiffAddition(args)
-    generator.generate("central_diff" + suffix)
-
-    generator = DirectRelAddition(args)
-    generator.generate("direct_rel_only")
+    #
+    # generator = TaylorAddition(args)
+    # generator.generate("taylor" + suffix)
+    #
+    # generator = CentralDiffAddition(args)
+    # generator.generate("central_diff" + suffix + "_new")
+    #
+    # generator = DirectRelAddition(args)
+    # generator.generate("direct_rel_only")
