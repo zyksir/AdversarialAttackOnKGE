@@ -52,6 +52,11 @@ The hyper-parameters for the different experiments can be found in [YAML](https:
  * `BGS` 
  * `AM`
 
+## Attack
+
+Add a line "attack: [attack_method]" to the yaml file corresponding to the dataset.
+
+
 ## Part 1: Reproduction  
 
 ### Link Prediction 
