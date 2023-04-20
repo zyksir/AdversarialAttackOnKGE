@@ -1,7 +1,7 @@
 # proposed by "Data Poisoning Attack against Knowledge Graph Embedding"
 # we use the Direct Attack in the paper
 # we want to find the triple (h', r', t') = argmax(f(h,r',t') - f(h+dh, r', t'))
-# CUDA_VISIBLE_DEVICES=5 python codes/noise_generator/direct_addition.py --init_checkpoint ./models/RotatE_FB15k-237_baseline
+# CUDA_VISIBLE_DEVICES=0 python codes/noise_generator/direct_addition.py --init_checkpoint ./models/RotatE_FB15k-237_baseline
 
 import itertools
 
@@ -91,14 +91,6 @@ class DirectAddition(GlobalRandomNoiseAttacker):
         print("len of true triples: %d"% len(noise_triples.intersection(all_true_triples)))
         return list(noise_triples)
 
-
-class TaylorAddition(DirectAddition):
-    def __init__(self, args):
-        super(TaylorAddition, self).__init__(args)
-        self.score_func = lambda s1, s2: args.lambda1 * s1 * 1.0 / args.lambda2 * s2
-        self.name = "taylor"
-
-
 class CentralDiffAddition(DirectAddition):
     def __init__(self, args):
         super(CentralDiffAddition, self).__init__(args)
@@ -159,7 +151,6 @@ class CentralDiffAddition(DirectAddition):
             return (h, cand_r_list[idx], cand_e_list[idx]), score.item()
         return (cand_e_list[idx], cand_r_list[idx], t), score.item()
 
-
 class DirectRelAddition(DirectAddition):
     def __init__(self, args):
         super(DirectAddition, self).__init__(args)
@@ -187,14 +178,6 @@ class DirectRelAddition(DirectAddition):
         cand_h_list, cand_t_list = list(cand_h_list), list(cand_t_list)
         args.num_cand = len(cand_h_list)
         e1 = time.time()
-        # print("gen cand %f" % (e1 - s))
-
-        # args.num_cand_ent = np.math.ceil(args.nentity / 100)
-        # cand_e_list = random.sample(self.all_entities, k=args.num_cand_ent)
-        # cand_h_t_list = list(itertools.product(cand_e_list, cand_e_list))
-        # cand_h_list, cand_t_list = zip(*cand_h_t_list)
-        # cand_h_list, cand_t_list = list(cand_h_list), list(cand_t_list)
-        # args.num_cand = len(cand_h_list)
 
         embed_h = self.kge_model.entity_embedding[h]
         embed_r = self.kge_model.relation_embedding[r]
@@ -203,7 +186,6 @@ class DirectRelAddition(DirectAddition):
         embed_r_grad = autograd.grad(score, embed_r)[0]
         perturbed_embed_r = embed_r - args.epsilon * embed_r_grad
         e2 = time.time()
-        # print("cal grad %f" % (e2 - e1))
 
         b_begin = 0
         cand_scores = []
@@ -224,24 +206,20 @@ class DirectRelAddition(DirectAddition):
         idx = np.argmax(cand_scores)
         score = cand_scores[idx]
         e3 = time.time()
-        # print("cal score %f" % (e3 - e2))
         return (cand_h_list[idx], r, cand_t_list[idx]), score.item()
 
 if __name__ == "__main__":
     args = get_noise_args()
     override_config(args)
+    
     suffix = ""
     if args.corruption_factor != 5:
         suffix = "_%d" % args.corruption_factor
-
     generator = DirectAddition(args)
     generator.generate("direct" + suffix)
-    #
-    # generator = TaylorAddition(args)
-    # generator.generate("taylor" + suffix)
-    #
-    # generator = CentralDiffAddition(args)
-    # generator.generate("central_diff" + suffix + "_new")
-    #
-    # generator = DirectRelAddition(args)
-    # generator.generate("direct_rel_only")
+    
+    generator = CentralDiffAddition(args)
+    generator.generate("central_diff" + suffix + "_new")
+    
+    generator = DirectRelAddition(args)
+    generator.generate("direct_rel_only")
