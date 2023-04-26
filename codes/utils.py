@@ -45,6 +45,7 @@ def get_input_data(args):
     if args.fake:
         fake_triples = pickle.load(open(os.path.join(args.save_path, "%s.pkl" % args.fake), "rb"))
         train_triples += fake_triples
+        test_triples = pickle.load(open(os.path.join(args.data_path, "targetTriples.pkl"), "rb"))
 
     logging.info(args.comments)
     logging.info('Model: %s' % args.model)

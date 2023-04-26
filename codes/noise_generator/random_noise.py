@@ -4,6 +4,7 @@ import time
 sys.path.append("./codes")
 from utils import *
 from trainer import BaseTrainer
+from IPython import embed
 
 
 def get_noise_args(args=None):
@@ -37,7 +38,7 @@ class GlobalRandomNoiseAttacker:
         self.all_entities = list(self.input_data.entity2id.values())
         self.target_triples = args.target_triples
         if self.target_triples is None:
-            self.target_triples = self.input_data.test_triples
+            self.target_triples = pickle.load(open(os.path.join(args.data_path, "targetTriples.pkl"), "rb"))
         set_logger(args, args.identifier)
 
     def get_noise_triples(self):
@@ -61,7 +62,8 @@ class GlobalRandomNoiseAttacker:
         print('------ Generating noise for each target triple ------')
         start_time = time.time()
         noise_triples = self.get_noise_triples()
-        print(f"Time taken to generate noise by {self.name} for {self.args.init_checkpoint}: {time.time() - start_time}")
+        dataset_model = self.args.init_checkpoint.split("/")[-1]
+        print(f"{self.name} for {dataset_model}\tTime taken:{time.time() - start_time}\tnum:{len(noise_triples)}")
         with open(os.path.join(self.args.init_checkpoint, "%s.pkl" % identifier), "wb") as fw:
             pickle.dump(noise_triples, fw)
 

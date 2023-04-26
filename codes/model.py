@@ -407,8 +407,9 @@ class KGEModel(nn.Module):
                 metrics["%d_MR" % level] = level2MRR[level][1] / level2MRR[level][0]
                 metrics["%d_MRR" % level] = level2MRR[level][2] / level2MRR[level][0]
                 metrics["%d_NUM" % level] = level2MRR[level][0]
-        with open(os.path.join(args.save_path, 'triple2ranking.pkl'), "wb") as fw:
-            pickle.dump(level2MRR, fw)
+        if not args.no_save:
+            with open(os.path.join(args.save_path, 'triple2ranking.pkl'), "wb") as fw:
+                pickle.dump(triple2mode2ranking, fw)
         return metrics
 
     def score_embedding(self, head, relation, tail, mode="simple", get_vec=False):

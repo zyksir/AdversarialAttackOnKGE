@@ -1,4 +1,5 @@
 .idea*
 models/*
-*__pycache__*
-*local_*.sh
+*pycache*
+*local*
+*ipynb_checkpoints*

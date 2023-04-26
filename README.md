@@ -27,7 +27,10 @@ ps: you can change 0 to the GPU id you want to use.
 - run.py: the main python file about training a KGE model
 
 - noise_generator: "GlobalRandomNoiseAttacker" in "random_noise.py" is the father class of all the other class. Each generator will take a trained model as input and then generate adversarial additions for given target triples.
+    - random_noise: 
 - result_analyse.py: after we run all the attack method, we can `python codes/result_analyse.py` to generate the tables of the result. I also use this file to generate the Latex table in the report.
+
+
 #### data
 here we have two benchmark datasets: FB15k-237 and wn18rr.
 In each dir, we have 5 files:
