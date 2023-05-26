@@ -16,6 +16,12 @@ def main(args):
     set_logger(args, filename=log_filename)
     input_data = get_input_data(args)
     trainer = BaseTrainer.get_trainer(input_data, args)
+    # empty means we run clean model on target triples
+    if args.fake == "empty":
+        args.init_checkpoint = args.save_path
+        trainer.load_model()
+        args.do_train = False
+        args.do_valid = False
     kge_model = trainer.kge_model
 
     logging.info('Start Training...')

@@ -13,14 +13,14 @@ import numpy as np
 import torch
 
 class InputData(object):
-    def __init__(self, entity2id, relation2id, train_triples, valid_triples, test_triples,
+    def __init__(self, entity2id, relation2id, train_triples, valid_triples, test_triples, all_true_triples,
                  fake_triples=None):
         self.entity2id = entity2id
         self.relation2id = relation2id
         self.train_triples = train_triples
         self.valid_triples = valid_triples
         self.test_triples = test_triples
-        self.all_true_triples = train_triples + valid_triples + test_triples
+        self.all_true_triples = all_true_triples
         self.fake_triples = fake_triples
 
 def get_input_data(args):
@@ -41,9 +41,13 @@ def get_input_data(args):
     train_triples = read_triple(os.path.join(args.data_path, "train.txt"), entity2id, relation2id)
     valid_triples = read_triple(os.path.join(args.data_path, 'valid.txt'), entity2id, relation2id)
     test_triples = read_triple(os.path.join(args.data_path, 'test.txt'), entity2id, relation2id)
+    all_true_triples = train_triples + valid_triples + test_triples
     fake_triples = []
     if args.fake:
-        fake_triples = pickle.load(open(os.path.join(args.save_path, "%s.pkl" % args.fake), "rb"))
+        if args.fake == "empty":
+            fake_triples = []
+        else:
+            fake_triples = pickle.load(open(os.path.join(args.save_path, "%s.pkl" % args.fake), "rb"))
         train_triples += fake_triples
         test_triples = pickle.load(open(os.path.join(args.data_path, "targetTriples.pkl"), "rb"))
 
@@ -59,6 +63,7 @@ def get_input_data(args):
                      train_triples=train_triples,
                      valid_triples=valid_triples,
                      test_triples=test_triples,
+                     all_true_triples=all_true_triples,
                      fake_triples=fake_triples)
 
 def get_parser():

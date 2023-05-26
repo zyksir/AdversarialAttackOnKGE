@@ -109,6 +109,7 @@ class BaseTrainer(object):
         return trainer
 
     def load_model(self):
+        print(f"load model from {os.path.join(self.args.init_checkpoint, 'checkpoint')}")
         checkpoint = torch.load(os.path.join(self.args.init_checkpoint, 'checkpoint'))
         self.kge_model.load_state_dict(checkpoint['model_state_dict'])
 

@@ -1,7 +1,7 @@
 # proposed by "Data Poisoning Attack against Knowledge Graph Embedding"
 # we use the Direct Attack in the paper
 # we want to find the triple (h', r', t') = argmax(f(h,r',t') - f(h+dh, r', t'))
-# CUDA_VISIBLE_DEVICES=5 python codes/noise_generator/instance_attribution.py --init_checkpoint ./models/RotatE_FB15k-237_baseline
+# CUDA_VISIBLE_DEVICES=5 python codes/noise_generator/instance_similarity.py --init_checkpoint ./models/RotatE_FB15k-237_baseline
 from random_noise import *
 from torch.nn import functional as F
 
@@ -34,10 +34,11 @@ class InstanceAttributionCos(GlobalRandomNoiseAttacker):
             with open(triple2nghbrs_path, "rb") as f:
                 self.triple2nghbrs = pickle.load(f)
         print(f"generate_nghbrs done")
-        self.similary_func = lambda vec, nghbr_vec: F.cosine_similarity(vec, nghbr_vec)
-        self.name = "cos"
+        self.similarity_func = lambda vec, nghbr_vec: F.cosine_similarity(vec, nghbr_vec)
+        self.name = "is_cos"
 
     def get_influential_triples(self):
+        args = self.args
         influential_triples_path = os.path.join(args.init_checkpoint, "%s_influential_triples.pkl" % self.name)
         if os.path.exists(influential_triples_path):
             with open(influential_triples_path, "rb") as f:
@@ -63,7 +64,7 @@ class InstanceAttributionCos(GlobalRandomNoiseAttacker):
                 if self.args.cuda:
                     b_ngbhrs = b_ngbhrs.cuda()
                 b_ngbhrs_vec = self.kge_model(b_ngbhrs, mode="single", get_vec=True).view(-1, vec_score.shape[-1])
-                b_sim = self.similary_func(vec_score, b_ngbhrs_vec).detach().cpu().numpy().tolist()
+                b_sim = self.similarity_func(vec_score, b_ngbhrs_vec).detach().cpu().numpy().tolist()
                 nghbr_sim += b_sim
             nghbr_sim = np.array(nghbr_sim)
             idx = np.argmax(nghbr_sim)
@@ -72,8 +73,8 @@ class InstanceAttributionCos(GlobalRandomNoiseAttacker):
             pickle.dump(triple2influential_triple, fw)
         return triple2influential_triple
 
-    def find_least_similary_entity(self, entity, r, e, mode):
-        train_triples = self.train_triples
+    def find_least_similarity_entity(self, entity, r, e, mode):
+        train_triples = np.array(self.input_data.train_triples + list(self.noise_triples))
         ent_embed = self.kge_model.entity_embedding[entity].view(1, -1)
         cos_sim_ent = F.cosine_similarity(ent_embed, self.entity_embedding)
         filter_ent = None
@@ -86,7 +87,7 @@ class InstanceAttributionCos(GlobalRandomNoiseAttacker):
         return idx
 
     def get_noise_triples(self):
-        noise_triples = set()
+        noise_triples = self.noise_triples
         influential_triples = self.get_influential_triples()
         for i in range(len(self.target_triples)):
             sys.stdout.write("%d in %d\r" % (i, len(self.target_triples)))
@@ -96,10 +97,10 @@ class InstanceAttributionCos(GlobalRandomNoiseAttacker):
                 continue
             hi, ri, ti = influential_triples[(h, r, t)]
             if ti in [h, t]:
-                fake_head = self.find_least_similary_entity(hi, ri, ti, mode="head-mode")
+                fake_head = self.find_least_similarity_entity(hi, ri, ti, mode="head-mode")
                 noise_triples.add((fake_head, ri, ti))
             elif hi in [h, t]:
-                fake_tail = self.find_least_similary_entity(ti, ri, hi, mode="tail-mode")
+                fake_tail = self.find_least_similarity_entity(ti, ri, hi, mode="tail-mode")
                 noise_triples.add((hi, ri, fake_tail))
             else:
                 print("unexpected behavior")
@@ -110,26 +111,26 @@ class InstanceAttributionCos(GlobalRandomNoiseAttacker):
 class InstanceAttributionDot(InstanceAttributionCos):
     def __init__(self, args):
         super(InstanceAttributionDot, self).__init__(args)
-        self.similary_func = lambda vec, nghbr_vec: torch.matmul(vec, nghbr_vec.t())
-        self.name = "dot"
+        self.similarity_func = lambda vec, nghbr_vec: torch.matmul(vec, nghbr_vec.t())
+        self.name = "is_dot"
 
 
 class InstanceAttributionL2(InstanceAttributionCos):
     def __init__(self, args):
         super(InstanceAttributionL2, self).__init__(args)
-        self.similary_func = lambda vec, nghbr_vec: -torch.norm((nghbr_vec-vec), p=2, dim=-1)
-        self.name = "l2"
+        self.similarity_func = lambda vec, nghbr_vec: -torch.norm((nghbr_vec-vec), p=2, dim=-1)
+        self.name = "is_l2"
 
 
 if __name__ == "__main__":
     args = get_noise_args()
     override_config(args)
-    print(f"after override_config, args={args.__dict__}")
+    # print(f"after override_config, args={args.__dict__}")
     generator = InstanceAttributionCos(args)
-    generator.generate("if_cos")
+    generator.generate("is_cos")
 
     generator = InstanceAttributionDot(args)
-    generator.generate("if_dot")
+    generator.generate("is_dot")
 
     generator = InstanceAttributionL2(args)
-    generator.generate("if_l2")
+    generator.generate("is_l2")

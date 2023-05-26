@@ -10,5 +10,7 @@ bash run.sh train ComplEx wn18rr $1 baseline 512 1024 200 200.0 1.0 0.002 80000 
 bash run.sh train DistMult FB15k-237 $1 baseline 1024 256 200 200.0 1.0 0.001 100000 16 -r 0.00001
 bash run.sh train DistMult wn18rr $1 baseline 512 1024 200 200.0 1.0 0.002 80000 8 -r 0.000005
 
+cd codes
 python find_target_triples.py wn18rr
 python find_target_triples.py FB15k-237
+cd ..

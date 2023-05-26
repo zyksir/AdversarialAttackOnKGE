@@ -33,14 +33,18 @@ for model_dataset_name in model_path.iterdir():
             continue
         log_content = file.read_text()
         if "Test MRR" not in log_content:
-            # file.unlink()
             continue
         results, metrics = {}, ["MRR", "MR", "HITS@1", "HITS@3", "HITS@10"]
         for metric in metrics:
             pattern = "Test %s at step (\d+): ([\d\.]+)" % metric
             score = float(re.findall(pattern, log_content)[0][-1])
             results[metric] = score
-        method2results[file.stem.split("-")[0]] = results
+        filename = file.stem.split("-")[0]
+        if filename == "train":
+            continue
+        elif filename == "empty":
+            filename = "train"
+        method2results[filename] = results
     print(f"result for {(model, dataset)}")
     print_results(method2results, "method", metrics)
     model_dataset2result[(model, dataset)] = method2results

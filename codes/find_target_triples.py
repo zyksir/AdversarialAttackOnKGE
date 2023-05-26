@@ -7,7 +7,7 @@ import pickle
 from utils import read_triple
 
 # for DATASET in ["FB15k-237", "wn18rr"]:
-DATASET = sys.argv[1]
+DATASET = "FB15k-237" # sys.argv[1]
 if DATASET == "FB15k-237":
     target_rank = 1
 elif DATASET == "wn18rr":
@@ -59,9 +59,7 @@ for MODEL in ["TransE", "RotatE", "DistMult", "ComplEx"]:
 
 # load 
 top1Triples = model2top1Triples["TransE"]\
-    .intersection(model2top1Triples["RotatE"])\
-    .intersection(model2top1Triples["DistMult"])\
-    .intersection(model2top1Triples["ComplEx"])
+    .intersection(model2top1Triples["RotatE"], model2top1Triples["DistMult"], model2top1Triples["ComplEx"])
 
 top1Triples_score = [((head, relation, tail), entity_density[head], entity_density[tail]) for head, relation, tail in top1Triples]
 top1Triples_score = sorted(top1Triples_score, key=lambda x: -(x[1] + x[2]))[:100]

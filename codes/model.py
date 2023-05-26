@@ -55,11 +55,8 @@ class KGEModel(nn.Module):
             b=self.embedding_range.item()
         )
         
-        if model_name == 'pRotatE':
-            self.modulus = nn.Parameter(torch.Tensor([[0.5 * self.embedding_range.item()]]))
-        
         #Do not forget to modify this line when you add a new model in the "forward" function
-        if model_name not in ['TransE', 'DistMult', 'ComplEx', 'RotatE', 'pRotatE']:
+        if model_name not in ['TransE', 'DistMult', 'ComplEx', 'RotatE']:
             raise ValueError('model %s not supported' % model_name)
             
         if model_name == 'RotatE' and (not double_entity_embedding or double_relation_embedding):
@@ -151,8 +148,7 @@ class KGEModel(nn.Module):
             'TransE': self.TransE,
             'DistMult': self.DistMult,
             'ComplEx': self.ComplEx,
-            'RotatE': self.RotatE,
-            'pRotatE': self.pRotatE
+            'RotatE': self.RotatE
         }
         
         if self.model_name in model_func:
@@ -172,6 +168,12 @@ class KGEModel(nn.Module):
 
         score = self.gamma.item() - torch.norm(score, p=1, dim=2)
         return score
+    
+    def TransE_predict(self, subject, relation, mode):
+        if mode == 'head-batch':
+            return subject - relation # head = tail - relation
+        else:
+            return subject + relation # tail = head + relation
 
     def DistMult(self, head, relation, tail, mode, get_vec=False):
         if mode == 'head-batch':
@@ -183,6 +185,9 @@ class KGEModel(nn.Module):
 
         score = score.sum(dim = 2)
         return score
+    
+    def DistMult_predict(self, subject, relation, mode):
+        return subject * relation # tail = head + relation
 
     def ComplEx(self, head, relation, tail, mode, get_vec=False):
         re_head, im_head = torch.chunk(head, 2, dim=2)
@@ -202,6 +207,18 @@ class KGEModel(nn.Module):
 
         score = score.sum(dim = 2)
         return score
+    
+    def ComplEx_predict(self, subject, relation, mode):
+        re_subject, im_subject = torch.chunk(subject, 2, dim=2)
+        re_relation, im_relation = torch.chunk(relation, 2, dim=2)
+        if mode == 'head-batch':
+            re_head = re_relation * re_subject + im_relation * im_subject
+            im_head = re_relation * im_subject - im_relation * re_subject
+            return torch.cat([re_head, im_head], dim=2)
+        else:
+            re_tail = re_subject * re_relation - im_subject * im_relation
+            im_tail = re_subject * im_relation + im_subject * re_relation
+            return torch.cat([re_tail, im_tail], dim=2)
 
     def RotatE(self, head, relation, tail, mode, get_vec=False):
         pi = 3.14159265358979323846
@@ -234,27 +251,23 @@ class KGEModel(nn.Module):
 
         score = self.gamma.item() - score.sum(dim = 2)
         return score
-
-    def pRotatE(self, head, relation, tail, mode):
-        pi = 3.14159262358979323846
-        
-        #Make phases of entities and relations uniformly distributed in [-pi, pi]
-
-        phase_head = head/(self.embedding_range.item()/pi)
+    
+    def RotatE_predict(self, subject, relation, mode):
+        pi = 3.14159265358979323846
+        re_subject, im_subject = torch.chunk(subject, 2, dim=2)
         phase_relation = relation/(self.embedding_range.item()/pi)
-        phase_tail = tail/(self.embedding_range.item()/pi)
+        re_relation = torch.cos(phase_relation)
+        im_relation = torch.sin(phase_relation)
 
         if mode == 'head-batch':
-            score = phase_head + (phase_relation - phase_tail)
+            re_head = re_relation * re_subject + im_relation * im_subject
+            im_head = re_relation * im_subject - im_relation * re_subject
+            return torch.cat([re_head, im_head], dim=2)
         else:
-            score = (phase_head + phase_relation) - phase_tail
+            re_tail = re_subject * re_relation - im_subject * im_relation
+            im_tail = re_subject * im_relation + im_subject * re_relation
+            return torch.cat([re_tail, im_tail], dim=2)
 
-        score = torch.sin(score)            
-        score = torch.abs(score)
-
-        score = self.gamma.item() - score.sum(dim = 2) * self.modulus
-        return score
-    
     @staticmethod
     def compute_score(model, args, positive_sample, negative_sample, mode):
         negative_score = model((positive_sample, negative_sample), mode=mode)
@@ -426,7 +439,6 @@ class KGEModel(nn.Module):
             'DistMult': self.DistMult,
             'ComplEx': self.ComplEx,
             'RotatE': self.RotatE,
-            'pRotatE': self.pRotatE
         }
 
         if self.model_name in model_func:
@@ -435,3 +447,26 @@ class KGEModel(nn.Module):
             raise ValueError('model %s not supported' % self.model_name)
 
         return score
+    
+    def predict_embedding(self, subject, relation, mode="head-batch"):
+        def vec2three_dim_vec(vec):
+            if len(vec.shape) == 2:
+                return vec.unsqueeze(1)
+            elif len(vec.shape) == 1:
+                return vec.unsqueeze(0).unsqueeze(0)
+            raise f"strange vec shape {vec.shape}"
+        subject, relation = vec2three_dim_vec(subject), vec2three_dim_vec(relation)
+
+        model_func = {
+            'TransE': self.TransE_predict,
+            'DistMult': self.DistMult_predict,
+            'ComplEx': self.ComplEx_predict,
+            'RotatE': self.RotatE_predict,
+        }
+
+        if self.model_name in model_func:
+            result = model_func[self.model_name](subject, relation, mode=mode)
+        else:
+            raise ValueError('model %s not supported' % self.model_name)
+
+        return result

@@ -27,7 +27,16 @@ ps: you can change 0 to the GPU id you want to use.
 - run.py: the main python file about training a KGE model
 
 - noise_generator: "GlobalRandomNoiseAttacker" in "random_noise.py" is the father class of all the other class. Each generator will take a trained model as input and then generate adversarial additions for given target triples.
-    - random_noise: 
+    - `random_noise`: generate candidate in random. `g_rand` means randomly selecting h,r,t; `l_rand` means the generated has the same head or tail with one target triple.
+    - `direct_addition`: method used in [Data Poisoning Attack](https://cse.buffalo.edu/~lusu/papers/IJCAI2019Hengtong.pdf). consider $boldsymbol{\epsilon}_x^*=-\epsilon_h \cdot \frac{\partial f\left(\boldsymbol{e}_x^{h, \text { target }}, \boldsymbol{r}_x^{\text {target }}, \boldsymbol{e}_x^{t, \text { target }}\right)}{\partial \boldsymbol{e}_x^{h, \text { target }}}$, 
+        - `direct` uses score function $\eta\left(e_x^{h, \text { target }}, r_j, e_j^t\right)=  f\left(\boldsymbol{e}_x^{h, \text { target }}+\boldsymbol{\epsilon}_x^*, \boldsymbol{r}_j, \boldsymbol{e}_j^t\right) - f\left(\boldsymbol{e}_x^{h, \text { target }}, \boldsymbol{r}_j, \boldsymbol{e}_j^t\right)$
+        - `direct_rel` uses the same score function while try to attack $\boldsymbol{r}_x^{\text {target }}$ instead of $\boldsymbol{e}_x^{h, \text { target }}$.
+        - `central_diff`  uses score function $\eta\left(e_x^{h, \text { target }}, r_j, e_j^t\right)=  f\left(\boldsymbol{e}_x^{h, \text { target }}+\boldsymbol{\epsilon}_x^*, \boldsymbol{r}_j, \boldsymbol{e}_j^t\right) - f\left(\boldsymbol{e}_x^{h, \text { target }}-\boldsymbol{\epsilon}_x^*, \boldsymbol{r}_j, \boldsymbol{e}_j^t\right)$
+    - `instance_similarity`: section 3.1.1 in [Instance Attribution Methods](https://aclanthology.org/2021.emnlp-main.648.pdf). 
+    - `gradient_similarity`: section 3.1.2 in [Instance Attribution Methods](https://aclanthology.org/2021.emnlp-main.648.pdf). using $\boldsymbol{g}(z, \widehat{\boldsymbol{\theta}}):=\nabla_{\boldsymbol{\theta}} \mathcal{L}(z, \boldsymbol{\boldsymbol { \theta }})$ as feature.
+    - `least_score`: select the triples which has the lowest score. `global` means we randomly selecting h,r,t; `local` means selected triples has the same head or tail with one target triple.
+
+
 - result_analyse.py: after we run all the attack method, we can `python codes/result_analyse.py` to generate the tables of the result. I also use this file to generate the Latex table in the report.
 
 
@@ -47,3 +56,4 @@ previous work on KGE model, * means we have already finished the code and experi
 
 reference code link:
 - [AttributionAttack](https://github.com/PeruBhardwaj/AttributionAttack) is the code implementation for paper [Instance Attribution Methods](https://aclanthology.org/2021.emnlp-main.648.pdf)
+    - for `influence functions` in section 3.1.3, it's based on gradient similarity. we will wait and see the influence of this method and then decide to implement this idea since it's very complex and time-consuming.

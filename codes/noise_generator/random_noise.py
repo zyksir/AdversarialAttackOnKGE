@@ -40,6 +40,7 @@ class GlobalRandomNoiseAttacker:
         if self.target_triples is None:
             self.target_triples = pickle.load(open(os.path.join(args.data_path, "targetTriples.pkl"), "rb"))
         set_logger(args, args.identifier)
+        self.noise_triples = set()
 
     def get_noise_triples(self):
         noise_triples = set()
@@ -59,11 +60,13 @@ class GlobalRandomNoiseAttacker:
         return list(noise_triples)
 
     def generate(self, identifier):
-        print('------ Generating noise for each target triple ------')
+        dataset_model = self.args.init_checkpoint.split("/")[-1]
+        print(f'------ {self.name} starts to generate noise for {dataset_model} ------')
         start_time = time.time()
         noise_triples = self.get_noise_triples()
-        dataset_model = self.args.init_checkpoint.split("/")[-1]
-        print(f"{self.name} for {dataset_model}\tTime taken:{time.time() - start_time}\tnum:{len(noise_triples)}")
+        print(f"Time taken:{time.time() - start_time}")
+        print(f"Num Noise:{len(noise_triples)}")
+        print(f"False Negative: {len(set(noise_triples).intersection(set(self.input_data.all_true_triples)))}")
         with open(os.path.join(self.args.init_checkpoint, "%s.pkl" % identifier), "wb") as fw:
             pickle.dump(noise_triples, fw)
 

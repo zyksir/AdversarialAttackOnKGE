@@ -1,4 +1,4 @@
-for NOISE in direct g_rand l_rand if_cos if_dot if_l2 fake_cos fake_dot fake_l2 taylor
+for NOISE in grad_is_cos grad_is_dot grad_is_l2 grad_gs_cos grad_gs_dot grad_gs_l2 direct central_diff direct_rel direct_10 central_diff_10 g_rand l_rand is_cos is_dot is_l2 gs_cos gs_dot gs_l2 least_score_global least_score_local least_similar_cos least_similar_dot least_similar_l2 
 do
   bash run.sh train RotatE FB15k-237 $1 baseline 1024 256 200 9.0 1.0 0.0005 50000 16 -de \
     --warm_up_steps 20000  --fake ${NOISE} --no_save
