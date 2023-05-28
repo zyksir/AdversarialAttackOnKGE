@@ -17,6 +17,7 @@ def get_noise_args(args=None):
     parser.add_argument('--lambda2', default=1.0, type=float)
     parser.add_argument('--corruption_factor', default=5, type=float)
     parser.add_argument('--num_cand_batch', default=64, type=int)
+    parser.add_argument('--no_store', action='store_true', help='do not save triples')
     return parser.parse_args(args)
 
 def override_config(args):
@@ -67,8 +68,9 @@ class GlobalRandomNoiseAttacker:
         print(f"Time taken:{time.time() - start_time}")
         print(f"Num Noise:{len(noise_triples)}")
         print(f"False Negative: {len(set(noise_triples).intersection(set(self.input_data.all_true_triples)))}")
-        with open(os.path.join(self.args.init_checkpoint, "%s.pkl" % identifier), "wb") as fw:
-            pickle.dump(noise_triples, fw)
+        if not self.args.no_store:
+            with open(os.path.join(self.args.init_checkpoint, "%s.pkl" % identifier), "wb") as fw:
+                pickle.dump(noise_triples, fw)
 
 
 class LocalRandomNoiseAttacker(GlobalRandomNoiseAttacker):

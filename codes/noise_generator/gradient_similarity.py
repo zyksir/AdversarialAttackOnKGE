@@ -104,7 +104,7 @@ class InstanceAttributionCosGrad(InstanceAttributionCos):
     def get_influential_triples(self):
         args = self.args
         influential_triples_path = os.path.join(args.init_checkpoint, "%s_influential_triples.pkl" % self.name)
-        if os.path.exists(influential_triples_path):
+        if not args.no_store and os.path.exists(influential_triples_path):
             with open(influential_triples_path, "rb") as f:
                 triple2influential_triple = pickle.load(f)
                 if (triple2influential_triple is not None and type(triple2influential_triple) == type({1:1}) and all([triple in triple2influential_triple for triple in self.target_triples])):
@@ -139,8 +139,9 @@ class InstanceAttributionCosGrad(InstanceAttributionCos):
 
             sys.stdout.write("influential:\t%d in %d\r" % (i, len(self.target_triples)))
             sys.stdout.flush()
-        with open(influential_triples_path, "wb") as fw:
-            pickle.dump(triple2influential_triple, fw)
+        if not args.no_store:
+            with open(influential_triples_path, "wb") as fw:
+                pickle.dump(triple2influential_triple, fw)
         return triple2influential_triple
 
 

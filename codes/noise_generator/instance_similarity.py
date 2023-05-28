@@ -40,7 +40,7 @@ class InstanceAttributionCos(GlobalRandomNoiseAttacker):
     def get_influential_triples(self):
         args = self.args
         influential_triples_path = os.path.join(args.init_checkpoint, "%s_influential_triples.pkl" % self.name)
-        if os.path.exists(influential_triples_path):
+        if not args.no_store and os.path.exists(influential_triples_path):
             with open(influential_triples_path, "rb") as f:
                 return pickle.load(f)
         triple2influential_triple = {}
@@ -69,8 +69,9 @@ class InstanceAttributionCos(GlobalRandomNoiseAttacker):
             nghbr_sim = np.array(nghbr_sim)
             idx = np.argmax(nghbr_sim)
             triple2influential_triple[(h, r, t)] = ngbhrs[idx]
-        with open(influential_triples_path, "wb") as fw:
-            pickle.dump(triple2influential_triple, fw)
+        if not args.no_store:
+            with open(influential_triples_path, "wb") as fw:
+                pickle.dump(triple2influential_triple, fw)
         return triple2influential_triple
 
     def find_least_similarity_entity(self, entity, r, e, mode):

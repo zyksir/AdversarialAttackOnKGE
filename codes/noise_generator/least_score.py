@@ -1,7 +1,7 @@
 # proposed by "Data Poisoning Attack against Knowledge Graph Embedding"
 # we use the Direct Attack in the paper
 # we want to find the triple (h', r', t') = argmax(f(h,r',t') - f(h+dh, r', t'))
-# CUDA_VISIBLE_DEVICES=5 python codes/noise_generator/least_score.py --init_checkpoint ./models/RotatE_wn18rr_baseline --corruption_factor 70 --num_cand_batch 2048
+# CUDA_VISIBLE_DEVICES=5 python codes/noise_generator/least_score.py --init_checkpoint ./models/RotatE_wn18rr_baseline --num_cand_batch 2048
 import heapq
 from direct_addition import *
 
